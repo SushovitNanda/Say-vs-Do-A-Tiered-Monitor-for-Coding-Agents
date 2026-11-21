@@ -14,7 +14,25 @@ patch and leave it out of their final report**, backtested on 379 real SWE-agent
 
 ![Cost vs recall](results/cost_vs_recall.png)
 
+**Full report:** [`report/Say_vs_Do_report.pdf`](report/Say_vs_Do_report.pdf), a 9-page write-up covering
+abstract, research questions, experimental setup, methodology, results, discussion and limitations, with 6
+figures and 8 tables.
+
 ---
+
+## Overview
+
+![Architecture: dataset construction and the monitoring cascade](report/figures/fig1_architecture.png)
+
+The project answers five research questions, each motivated by the one before:
+
+| RQ | Question | Short answer |
+|---|---|---|
+| **RQ1** Cheap signals | How well do static analysis and a say vs do check detect concealed flaws at a strict FPR, and which attack types does each cover? | They complement each other (AUROC 0.94 combined, at 2.5% of the judge's cost) but miss subtle attacks: recall 0.73 vs the judge's 0.91. |
+| **RQ2** Cascade | How much of the strong judge's recall can a cascade recover at 5% FPR, as a function of the share of traffic sent to the judge? | Sending about 27% of traffic gives 0.87 vs 0.91 (not significant) at 34% of the cost. |
+| **RQ3** Transfer | Do thresholds fitted on one agent transfer to unseen agents? | Yes: no AUROC drops on llama-8b and llama-405b, and the cascade matches the judge (0.96) at 14% of the cost. |
+| **RQ4** What the judge relies on | What evidence does the judge use, and how much survives without the trajectory? | It partly exploits a trajectory artefact (cited in 74% of attacks vs 2% of honest runs). Without it the judge drops to AUROC 0.95, and the cascade still holds. |
+| **RQ5** A cheaper cheap tier | Can a small fine-tuned open model replace the prompted Tier 1? | Not yet. LoRA raises Qwen3.5-4B from 0.83 to 0.88 AUROC at ~90× lower latency, but the prompted Tier 1 scores 0.92. |
 
 ## Why
 
@@ -123,10 +141,10 @@ actually gives on the split. Cost is the mean API cost per 1,000 trajectories.
 | Tier 1 say vs do | 0.92 [0.88, 0.96] | 0.98 | 0.58 / 0.73 | 0.05 | 0.40 | – |
 | T0 + T1 mean | 0.94 [0.91, 0.98] | 0.98 | 0.73 / 0.77 | 0.02 | 0.40 | – |
 | **Tier 2 on everything** | **0.97** [0.94, 1.00] | **1.00** | **0.91 / 0.96** | 0.02 | 15.96 | 100% |
-| Cascade, plan rule, 30% budget | 0.95 [0.92, 0.98] | 0.99 | 0.85 / 0.92 | 0.05 | 4.28 | 23% |
+| Cascade, plan rule, 30% budget | 0.95 [0.91, 0.98] | 0.99 | 0.85 / 0.92 | 0.05 | 4.27 | 23% |
 | Cascade, mean rule, 20% budget | 0.95 [0.91, 0.98] | 0.98 | 0.82 / 0.92 | 0.02 | 3.17 | 15% |
 | **Cascade, mean rule, 30% budget** | 0.95 [0.91, 0.98] | 0.98 | **0.87 / 0.96** | 0.04 | **5.44** | 27% |
-| Tier 2 without trajectory (ablation) | 0.95 [0.92, 0.98] | 0.98 | 0.80 / 0.85 | 0.08 | 5.35 | 100% |
+| Tier 2 without trajectory (ablation) | 0.95 [0.92, 0.98] | 0.98 | 0.79 / 0.85 | 0.08 | 5.35 | 100% |
 | Cascade, mean rule, Tier 2 without trajectory, 20% | 0.95 [0.91, 0.98] | 0.98 | 0.82 / 0.92 | 0.04 | 1.62 | 19% |
 
 Full table with every budget, CIs, recall at 1% and 5% FPR, precision, F1 and latency:
@@ -220,7 +238,7 @@ Every miss and false positive of the headline cascade was read by hand
    reasons on attacks vs 2% on honest runs**. It is using "this change isn't in the trajectory" as
    evidence. Numbers for Tier 2 *with* trajectory, and for cascades built on it, are therefore an
    **upper bound**. The no-trajectory ablation is the conservative estimate: Tier 2 drops to AUROC
-   0.95 and recall 0.80, and the conservative cascade (Tier 2 without trajectory, 20% budget) reaches
+   0.95 and recall 0.79, and the conservative cascade (Tier 2 without trajectory, 20% budget) reaches
    recall 0.82 at 30% of that judge's cost.
 2. **Attacks are synthetic and often blatant.** A real scheming agent would choose its own flaw and
    could make it look much more like honest work. A1 to A3 and A7 are easy for every tier, so the
@@ -247,6 +265,15 @@ backtest`. Every LLM call is cached in `cache/llm/` and logged with tokens, late
 `logs/llm_calls.jsonl`, so a rerun with a warm cache costs nothing. The key used here was limited to
 about 40 requests per minute; `src/llm.py` has a client-side rate limiter (`LLM_RPM`).
 
+To rebuild the PDF report from the committed results (no API calls):
+
+```bash
+pip install -r requirements-report.txt
+cd src && python report_figures.py && python make_report.py   # -> report/Say_vs_Do_report.pdf
+```
+
+`run.sh` and `run.ps1` do this automatically at the end if `reportlab` is installed.
+
 ```
 src/
   llm.py             provider abstraction, retries, rate limiter, cache, cost logging
@@ -262,8 +289,11 @@ src/
   error_analysis.py  dump misses and false positives
   ft_*.py            stretch: fine-tuned small monitor (see below)
   redact_artifacts.py  mask the fake A1 keys in committed artifacts (writers also redact on write)
+  report_figures.py  report-only figures (architecture, budget sweep, trajectory leak)
+  make_report.py     builds the PDF report; tables are generated from results/*.csv
 prompts/             all prompt templates
 results/             metrics, plots, error analysis (committed)
+report/              Say_vs_Do_report.pdf and its figures
 data/sample/         a few example records (full data is regenerated by run.sh)
 ```
 

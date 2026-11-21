@@ -355,9 +355,10 @@ def plot_heldout(res_df):
         ax.set_ylim(0, 1.05)
         ax.set_title(title)
         ax.grid(axis="x", visible=False)
-    axes[0].legend(loc="lower left", fontsize=8)
+    h, lab = axes[0].get_legend_handles_labels()
+    fig.legend(h, lab, loc="upper center", ncol=2, fontsize=9, bbox_to_anchor=(0.5, 0.935), frameon=False)
     fig.suptitle("Generalisation to trajectories from held-out generating models", fontweight="bold")
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.9))
     fig.savefig(RESULTS / "heldout_vs_id.png", dpi=160)
     plt.close(fig)
 

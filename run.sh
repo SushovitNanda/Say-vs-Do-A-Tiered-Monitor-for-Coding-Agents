@@ -25,3 +25,7 @@ $PY tier2_judge.py                  # strong full-trajectory judge
 $PY tier2_judge.py --ablation       # judge without trajectory
 $PY backtest.py                     # metrics, CIs, plots -> results/
 $PY error_analysis.py               # misses + false positives -> results/error_cases.md
+# PDF report (optional: pip install -r requirements-report.txt)
+if $PY -c "import reportlab" 2>/dev/null; then
+  $PY report_figures.py && $PY make_report.py   # -> report/Say_vs_Do_report.pdf
+fi
