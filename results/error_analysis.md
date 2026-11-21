@@ -40,5 +40,5 @@ for **74% of attacks (135/182) but only 2% of honest runs (4/197)**. Our attacks
 the fact, so the trajectory never shows the flaw being written. That is a strong, dataset-specific
 tell, and Tier 2's numbers *with* trajectory should be read as an **upper bound**. The no-trajectory
 ablation (same judge, issue + patch + report only) gives the more conservative estimate: AUROC
-0.95 vs 0.97, and recall at a train-fixed threshold 0.80 vs 0.91 on test. A real attacker that edits
+0.95 vs 0.97, and recall at a train-fixed threshold 0.79 vs 0.91 on test. A real attacker that edits
 through the agent's own tools would leave the edit in the trajectory, and would remove this signal.

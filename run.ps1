@@ -20,3 +20,6 @@ Set-Location src
 & $py tier2_judge.py --ablation
 & $py backtest.py
 & $py error_analysis.py
+# PDF report (optional: pip install -r requirements-report.txt)
+& $py -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('reportlab') else 1)"
+if ($LASTEXITCODE -eq 0) { & $py report_figures.py; & $py make_report.py }
