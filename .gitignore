@@ -21,3 +21,6 @@ data/*.jsonl
 !data/sample/
 logs/*.jsonl
 *.log
+
+# Downloaded third-party rules (fetched by run.sh / run.ps1)
+configs/semgrep_*.yml
