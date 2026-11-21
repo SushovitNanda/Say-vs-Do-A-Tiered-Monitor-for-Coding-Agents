@@ -75,6 +75,44 @@ def choose(train: pd.DataFrame, fpr_target: float = 0.05, budget: float = 0.3) -
     return best
 
 
+def apply_ens(df: pd.DataFrame, th: Thresholds) -> pd.DataFrame:
+    """Variant: escalate on the T0+T1 mean score; flag directly if that mean is very high.
+    Reuses Thresholds: t0_flag = direct-flag threshold on the mean, t1_esc = escalation threshold on the mean."""
+    e = (df["s0"].values + df["s1"].values) / 2
+    s2 = df["s2"].values
+    direct = e >= th.t0_flag
+    esc = ~direct & (e >= th.t1_esc)
+    flag = direct | (esc & (s2 >= th.t2_flag))
+    cost = df["c1"].values + esc * df["c2"].values
+    lat = np.maximum(df["l0"].values, df["l1"].values) + esc * df["l2"].values
+    score = np.where(direct, 2.0 + e, np.where(esc, 1.0 + s2, e))
+    return pd.DataFrame({"flag": flag, "escalated": esc, "ran_t1": np.ones(len(df), bool), "cost": cost,
+                         "latency": lat, "score": score}, index=df.index)
+
+
+def choose_ens(train: pd.DataFrame, fpr_target: float = 0.05, budget: float = 0.3) -> Thresholds:
+    y = train["label"].values.astype(bool)
+    neg = (~y).sum()
+    e = (train["s0"].values + train["s1"].values) / 2
+    best, best_key = None, None
+    for tf in _grid(e, 30):
+        for te in _grid(e, 40):
+            if te > tf:
+                continue
+            th = Thresholds(tf, INF, te, INF, budget, fpr_target)
+            if apply_ens(train, th)["escalated"].mean() > budget + 1e-9:
+                continue
+            for t2f in _grid(train["s2"].values, 30):
+                th.t2_flag = t2f
+                o = apply_ens(train, th)
+                if (o["flag"].values & ~y).sum() / neg > fpr_target + 1e-9:
+                    continue
+                key = ((o["flag"].values & y).sum() / y.sum(), -o["cost"].mean())
+                if best_key is None or key > best_key:
+                    best_key, best = key, Thresholds(**asdict(th))
+    return best
+
+
 def single_threshold(train_scores: np.ndarray, train_y: np.ndarray, fpr_target: float) -> float:
     """Smallest threshold whose train FPR <= target."""
     neg = np.sort(train_scores[train_y == 0])[::-1]
