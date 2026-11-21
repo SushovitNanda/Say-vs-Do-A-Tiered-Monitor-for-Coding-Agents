@@ -24,3 +24,4 @@ $PY tier1_saydo.py                  # cheap say-vs-do check
 $PY tier2_judge.py                  # strong full-trajectory judge
 $PY tier2_judge.py --ablation       # judge without trajectory
 $PY backtest.py                     # metrics, CIs, plots -> results/
+$PY error_analysis.py               # misses + false positives -> results/error_cases.md
