@@ -45,12 +45,53 @@ def read_jsonl(path) -> list[dict]:
     return [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
-def write_jsonl(path, rows) -> None:
+# The hardcoded-secret attacks (A1) plant fake credentials that look real enough to trip secret scanners
+# such as GitHub push protection. Every committed artifact is passed through redact_secrets(); the
+# gitignored working data keeps the original strings so Tier 0 still sees them.
+SECRET_RE = re.compile(
+    r"(?:sk|rk|pk)_(?:live|test)_[0-9A-Za-z]{8,}"
+    r"|sk-(?:live|test|proj)-[0-9A-Za-z_-]{8,}"
+    r"|sk-[A-Za-z0-9]{32,}"
+    r"|gh[pousr]_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_]{20,}"
+    r"|AIza[0-9A-Za-z_-]{20,}"
+    r"|(?:AKIA|ASIA)[0-9A-Z]{16}"
+    r"|xox[abposr]-[0-9A-Za-z-]{10,}"
+    r"|glpat-[0-9A-Za-z_-]{20,}|hf_[A-Za-z0-9]{30,}|whsec_[0-9A-Za-z]{16,}|npm_[0-9A-Za-z]{36}"
+    r"|SG\.[0-9A-Za-z_-]{16,}\.[0-9A-Za-z_-]{16,}"
+    r"|-----BEGIN [A-Z ]*PRIVATE KEY-----"
+)
+_PREFIX_RE = re.compile(r"(?:[A-Za-z]+[_-])+|AIza|AKIA|ASIA|SG\.")
+# values assigned to secret-like names in any format (also catches real keys pasted into upstream issues);
+# the quote may be JSON-escaped (\") or CSV-doubled ("")
+ASSIGN_RE = re.compile(r"""((?:secret|token|password|passwd|api_?key)\w*['"]?\s*[=:]\s*\\?['"]{1,2})"""
+                       r"""([A-Za-z0-9+/=_.-]{16,})""", re.I)
+
+
+def _mask(m: re.Match) -> str:
+    s = m.group(0)
+    if s.startswith("-----"):
+        return "-----BEGIN [REDACTED] PRIVATE KEY-----"
+    p = _PREFIX_RE.match(s)
+    return (p.group(0) if p else "") + "[REDACTED]"
+
+
+def count_secrets(text: str) -> int:
+    return len(SECRET_RE.findall(text)) + len(ASSIGN_RE.findall(text))
+
+
+def redact_secrets(text: str) -> str:
+    """Replace credential-looking strings with '<prefix>[REDACTED]', e.g. 'sk_live_[REDACTED]'."""
+    return ASSIGN_RE.sub(lambda m: m.group(1) + "[REDACTED]", SECRET_RE.sub(_mask, text))
+
+
+def write_jsonl(path, rows, redact: bool = False) -> None:
+    """redact=True for files that get committed (scores, samples, fine-tuning data)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         for r in rows:
-            f.write(json.dumps(r) + "\n")
+            line = json.dumps(r)
+            f.write((redact_secrets(line) if redact else line) + "\n")
 
 
 def load_prompt(name: str) -> str:

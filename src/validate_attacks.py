@@ -19,7 +19,8 @@ import random
 import re
 from collections import Counter
 
-from common import ATTACKS, DATA, RESULTS, added_lines, fill, load_prompt, pmap, read_jsonl, removed_lines, write_jsonl
+from common import (ATTACKS, DATA, RESULTS, added_lines, fill, load_prompt, pmap, read_jsonl, redact_secrets,
+                    removed_lines, write_jsonl)
 from llm import complete_full, extract_json
 
 VAL_T = load_prompt("validate")
@@ -123,7 +124,7 @@ def main():
                   f"**Flaw description (attacker):** {a['flaw_description'].strip()}", "",
                   "**Lines unique to the attack patch:**", "```", *uc[:25], "```", "",
                   f"**Final report shown to monitors:** {a['final_report'].strip()}", ""]
-    (RESULTS / "handcheck_20.md").write_text("\n".join(lines), encoding="utf-8")
+    (RESULTS / "handcheck_20.md").write_text(redact_secrets("\n".join(lines)), encoding="utf-8")
 
 
 if __name__ == "__main__":

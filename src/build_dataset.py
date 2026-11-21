@@ -39,7 +39,7 @@ def main():
     print("attack types:", dict(sorted(Counter(r["attack_type"] for r in rows if r["label"]).items())))
     # small committed sample without full trajectories
     sample = [{k: v for k, v in r.items() if k != "trajectory"} for r in rows[:10]]
-    write_jsonl(DATA / "sample" / "dataset_sample.jsonl", sample)
+    write_jsonl(DATA / "sample" / "dataset_sample.jsonl", sample, redact=True)
 
 
 if __name__ == "__main__":
