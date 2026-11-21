@@ -1,0 +1,8 @@
+# Stretch phase only (local GPU scoring of the fine-tuned monitor). torch: CUDA 12.8 build from https://download.pytorch.org/whl/cu128
+--extra-index-url https://download.pytorch.org/whl/cu128
+-r requirements.txt
+accelerate==1.16.0
+peft==0.22.0
+safetensors==0.8.0
+torch==2.11.0+cu128
+transformers==5.23.0

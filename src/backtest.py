@@ -162,7 +162,9 @@ def make_configs(df):
         for b in (0.2, 0.3):
             cfgs.append(Config(f"Ens-cascade, no-traj T2 (T2 budget {int(b * 100)}%)", "cascade_ens",
                                budget=b, t2="2nt"))
-    local_names = {"base_qwen4b": "Qwen3.5-4B zero-shot (local GPU)"}
+    local_names = {"base_qwen4b": "Qwen3.5-4B zero-shot (local GPU)",
+                   "ft_fresh_x5": "Qwen3.5-4B LoRA, real rows x5 (local GPU)",
+                   "ft_fresh_aug800": "Qwen3.5-4B LoRA, + Adaption augmentation (local GPU)"}
     for c in df.columns:
         if c.startswith("s_"):
             m = c[2:]
@@ -236,7 +238,10 @@ def paired_bootstrap(df, cfg_a, cfg_b, split):
 def short(name):
     return (name.replace(" (static)", "").replace(" (say-vs-do)", "").replace(" on everything", "")
             .replace("Ensemble ", "Ens ").replace(" (mean)", "").replace("Ens-cascade, no-traj T2 (T2 budget ", "Ens-cascade no-traj ").replace("Ens-cascade (T2 budget ", "Ens-cascade ").replace("Cascade (T2 budget ", "Cascade ")
-            .replace("%)", "%").replace(", no trajectory (ablation)", " no-traj"))
+            .replace("%)", "%").replace(", no trajectory (ablation)", " no-traj")
+            .replace(" (local GPU)", "").replace("Qwen3.5-4B LoRA, real rows x5", "Qwen-4B LoRA (A)")
+            .replace("Qwen3.5-4B LoRA, + Adaption augmentation", "Qwen-4B LoRA (B, +aug)")
+            .replace("Qwen3.5-4B zero-shot", "Qwen-4B zero-shot"))
 
 
 def plot_cost_recall(res_df):
@@ -295,7 +300,7 @@ def plot_heatmap(bt_df):
             if not np.isnan(v):
                 ax.text(j, i, f"{v:.0%}", ha="center", va="center", fontsize=8,
                         color=SURFACE if v > 0.55 else INK)
-    ax.set_title("Recall by attack type (test + held-out, train-fixed 5% FPR thresholds)")
+    ax.set_title("Recall by attack type\n(test + held-out, train-fixed 5% FPR thresholds)")
     cb = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
     cb.outline.set_visible(False)
     fig.tight_layout()

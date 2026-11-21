@@ -19,3 +19,4 @@ Set-Location src
 & $py tier2_judge.py
 & $py tier2_judge.py --ablation
 & $py backtest.py
+& $py error_analysis.py

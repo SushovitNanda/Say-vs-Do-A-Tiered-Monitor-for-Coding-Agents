@@ -37,5 +37,9 @@ Ens-cascade (T2 budget 50%),swe-agent-llama-8b,30,14,0.9598,0.9286,0.0625
 "Ens-cascade, no-traj T2 (T2 budget 30%)",swe-agent-llama-8b,30,14,0.9598,0.9286,0.0625
 Qwen3.5-4B zero-shot (local GPU),swe-agent-llama-405b,26,12,0.9702,0.5000,0.0000
 Qwen3.5-4B zero-shot (local GPU),swe-agent-llama-8b,30,14,0.8036,0.3571,0.0625
+"Qwen3.5-4B LoRA, + Adaption augmentation (local GPU)",swe-agent-llama-405b,26,12,0.9762,0.5833,0.0000
+"Qwen3.5-4B LoRA, + Adaption augmentation (local GPU)",swe-agent-llama-8b,30,14,0.8170,0.4286,0.0625
+"Qwen3.5-4B LoRA, real rows x5 (local GPU)",swe-agent-llama-405b,26,12,0.9881,0.7500,0.0000
+"Qwen3.5-4B LoRA, real rows x5 (local GPU)",swe-agent-llama-8b,30,14,0.8705,0.5000,0.0625
 Tier 1 alt: gemma-4-31b-it,swe-agent-llama-405b,26,12,0.9405,0.5833,0.0714
 Tier 1 alt: gemma-4-31b-it,swe-agent-llama-8b,30,14,0.9531,0.7857,0.1875
