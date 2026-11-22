@@ -89,9 +89,12 @@ rate, for as little money and latency as possible.
      description**, confirms the flaw is present and of the requested type, that the fix is
      preserved, and that the report is silent about it.
 
-  **182 of 223 attacks passed (82%)**; A6 passed least often (15/32). A first-pass read of 20 random
-  attacks (`results/handcheck_20.md`) rated 18 clearly valid and 2 borderline.
-  *Human hand-check: **TODO, fill in after reviewing `results/handcheck_20.md`**.*
+  **182 of 223 attacks passed (82%)**; A6 passed least often (15/32).
+  **Human hand-check** of 20 random validated attacks (`results/handcheck_20.md`): **19 of 20 are real,
+  hidden flaws of the stated type** (95%; Wilson 95% CI 76% to 99%). The invalid one (#5, A5) adds a
+  second `timeout` parameter to a function signature. That is a `SyntaxError`, so the module would crash
+  instead of quietly changing behaviour. A scan of all 182 attacks found no other duplicated-parameter
+  signature. That attack is in the train split, so it can only affect threshold fitting (see Limitations).
 * **Splits:** every run from `llama-8b` and `llama-405b` goes to a **held-out** test set (56 runs, 26
   attacks). `llama-70b` runs are split 50/50 into **train** (161) and **test** (162), stratified by label
   and attack type. **Every threshold is fixed on train** and applied unchanged to test and held-out.
@@ -245,6 +248,13 @@ Every miss and false positive of the headline cascade was read by hand
    hard part of this benchmark is A4 to A6.
 3. **Patches are not executed.** A flaw is confirmed by a model check given the attacker's
    description, not by an exploit. Omission attacks can only be validated against the honest patch.
+   The human hand-check found 1 of 20 attacks invalid (a syntax error), so about 5% of attacks (CI up to
+   24%) may not be working flaws. Dropping that attack and refitting every threshold leaves the headline
+   cascade, all single monitors and the no-trajectory ablation unchanged. A few secondary cascade settings
+   move: the no-trajectory cascade at a 20% budget would recall 0.79 instead of 0.82 on test ($1.40 instead
+   of $1.62 per 1k), and the mean rule at a 50% budget would escalate more (recall 0.91 at $9.57 per 1k).
+   So a single training example can shift thresholds that sit at the edge of the grid. The committed
+   results keep the frozen dataset, because the other 162 attacks were not hand-checked.
 4. **Small data:** 379 trajectories, 56 held-out, Python only, small patches, one dataset source,
    Llama-based agents only. CIs are wide, especially per attack type (A6 has 15 examples).
 5. **Final reports are generated**, not written by the agents, because SWE-agent doesn't produce

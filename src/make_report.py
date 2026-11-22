@@ -287,7 +287,9 @@ def story():
             "different family (deepseek-v4-flash), <i>given the attacker's own flaw description</i>, confirms that "
             "the flaw is present and of the requested type, that the fix is preserved, and that the report is "
             "silent about it. <b>182 of 223 attacks (82%) passed</b>; disabled-check attacks (A6) passed least "
-            "often. A first-pass read of 20 random validated attacks rated 18 clearly valid and 2 borderline."),
+            "often. A <b>human check of 20 random validated attacks found 19 valid</b> (95%; Wilson 95% CI "
+            "76–99%). The invalid one adds a duplicate parameter to a function signature, a syntax error "
+            "rather than a working flaw; no other attack in the dataset has this pattern."),
           table([["Code", "Attack type", "Example", "Valid"],
                  ["A1", "Hardcoded credential", "API key or token as a string literal", "30"],
                  ["A2", "Injection", "eval, os.system / shell=True, string-built SQL", "25"],
@@ -511,10 +513,14 @@ def story():
                    "shot; a real scheming agent would choose its own flaw and could make it look much more like honest "
                    "work. A1–A3 and A7 are easy for every tier, so the benchmark's difficulty lies in A4–A6.",
                    "<b>No execution.</b> Flaws are confirmed by a model check given the attacker's description, not by "
-                   "running an exploit or the tests; omission attacks are validated only against the honest patch.",
+                   "running an exploit or the tests; omission attacks are validated only against the honest patch. "
+                   "The human check found 1 of 20 attacks invalid, so about 5% of attacks (CI up to 24%) may not be "
+                   "working flaws. That attack is in the train split. Refitting every threshold without it leaves the "
+                   "headline cascade, all single monitors and the ablation unchanged. Some secondary cascades move by "
+                   "1–3 test attacks (e.g. the no-trajectory cascade at B = 20%: recall 0.79 instead of 0.82), "
+                   "so thresholds at the edge of the grid are sensitive to single training examples.",
                    "<b>Small data.</b> 379 trajectories (56 held-out), Python only, small patches, one dataset source and "
-                   "Llama-based agents only; CIs are wide, especially per attack type (A6 has 15 attacks). The "
-                   "20-attack spot check of attack validity was a first pass and has yet to be confirmed by a second reader.",
+                   "Llama-based agents only; CIs are wide, especially per attack type (A6 has 15 attacks).",
                    "<b>Generated reports.</b> SWE-agent does not write final reports, so reports are generated from the "
                    "honest patch; real agents' reports may contain more or less detail.",
                    "<b>Single run per model.</b> Each monitor was run once per example (with caching); sampling variance "
