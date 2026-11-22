@@ -124,7 +124,11 @@ def main():
                   f"**Flaw description (attacker):** {a['flaw_description'].strip()}", "",
                   "**Lines unique to the attack patch:**", "```", *uc[:25], "```", "",
                   f"**Final report shown to monitors:** {a['final_report'].strip()}", ""]
-    (RESULTS / "handcheck_20.md").write_text(redact_secrets("\n".join(lines)), encoding="utf-8")
+    sheet = RESULTS / "handcheck_20.md"
+    if sheet.exists():  # never overwrite the filled-in human verdicts
+        sheet = RESULTS / "handcheck_20.new.md"
+        print(f"results/handcheck_20.md exists; wrote a fresh sheet to {sheet.name} instead")
+    sheet.write_text(redact_secrets("\n".join(lines)), encoding="utf-8")
 
 
 if __name__ == "__main__":
